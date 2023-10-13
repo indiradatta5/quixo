@@ -1,0 +1,427 @@
+import random
+import math
+import numpy as np
+
+def check_move(board, turn, index, push_from):
+    # implement your function here
+    # variable definitions
+    a = int(len(board))
+    c = int(math.sqrt(a))
+    d = int(a - c)
+    e = int(c - 1)
+    f = int(d + 1)
+    g = int(c + 1)
+    # valid moves according to the direction
+    valid_L = list(range(0,f,c))
+    valid_R = list(range(e,a,c))
+    valid_T = list(range(0,g,1))
+    valid_B = list(range(d,a,1))
+    # index of valid cubes
+    valid_index = list(valid_L + valid_R + valid_T + valid_B)
+    valid_index.sort()
+    valid_index = list(set(valid_index))
+    # to check if the moves selected is valid
+    if (push_from == 'T') and (index not in valid_T) and (index in valid_index) and (board[index] == turn or board[index] == 0):
+        return True
+    elif (push_from == 'B') and (index not in valid_B) and (index in valid_index) and (board[index] == turn or board[index] == 0):
+        return True
+    elif (push_from == 'L') and (index not in valid_L) and (index in valid_index) and (board[index] == turn or board[index] == 0):
+        return True
+    elif (push_from == 'R') and (index not in valid_R) and (index in valid_index) and (board[index] == turn or board[index] == 0):
+        return True
+    else:
+        return False
+
+def apply_move(board, turn, index, push_from):
+    # implement your function here
+    # Work out dimension of the board
+    a = int(len(board))
+    c = int(math.sqrt(a))
+    # Identify Operating column here
+    operating_col_index = index % c
+    operating_col = [c * x + operating_col_index for x in range(c)]
+    # Identify Operating row here
+    operating_row_index = math.floor(index/c)
+    operating_row = [c * operating_row_index + x for x in range(c)]
+   
+    # Represent the board as a 2-D array for easier manipulation
+    board_array = np.array(board).reshape(c,c)
+   
+    # Computing new board position after move
+    if push_from == 'B':
+        # Push operating_col 1 place up from BOTTOM and append 'turn' variable at the END of column
+        new_col = list(board_array[operating_col_index,:])
+        new_col.pop(operating_row_index)
+        final_col = new_col + [turn]
+        # Replace new column in place of operating col_index
+        board_array[:,operating_col_index] = final_col
+        board = list(board_array.reshape(-1,1).squeeze())
+    elif push_from == 'T':
+        # Push operating_col 1 place down from TOP and append 'turn' variable at the START of column
+        new_col = list(board_array[operating_col_index,:])
+        new_col.pop(operating_row_index)
+        final_col = [turn] + new_col    
+        # Replace new column in place of operating col_index
+        board_array[:,operating_col_index] = final_col
+        board = list(board_array.reshape(-1,1).squeeze())
+    elif push_from == 'L':
+        # Push operating_row 1 place right from LEFT and append 'turn' variable at the START of row
+        new_row = list(board_array[operating_row_index,:])
+        new_row.pop(operating_col_index)
+        final_row = [turn] + new_row
+        # Replace new row in place of operating row_index
+        board_array[operating_row_index,:] = final_row
+        board = list(board_array.reshape(-1,1).squeeze())
+    elif push_from == 'R':
+        # Push operating_row 1 place left from RIGHT and append 'turn' variable at the END of row
+        new_row = list(board_array[operating_row_index,:])
+        new_row.pop(operating_col_index)
+        final_row = new_row + [turn]
+        # Replace new row in place of operating row_index
+        board_array[operating_row_index,:] = final_row
+        board = list(board_array.reshape(-1,1).squeeze())
+    return board[:]
+
+def check_victory(board, who_played):
+    # implement your function here
+    # Work out dimension of the board
+    a = int(len(board))
+    c = int(math.sqrt(a))
+    # Represent the board as a 2-D array for easier manipulation
+    board = np.array(board).reshape(c,c)
+    players = [1,2]
+   
+    candidate_rows = np.where((board > 0).sum(axis=1) == c)[0]
+    candidate_cols = np.where((board > 0).sum(axis=0) == c)[0]
+    winner = []
+    if candidate_rows.size>0:
+        for x in range(candidate_rows.size):
+            candidate_row_total = board[candidate_rows[x],:].sum()
+            if candidate_row_total == c * 1:
+                winner.append(1)
+            if candidate_row_total == c * 2:
+                winner.append(2)            
+    elif candidate_cols.size>0:
+        for x in range(candidate_cols.size):
+            candidate_col_total = board[candidate_cols[x],:].sum()
+            if candidate_col_total == c * 1:
+                winner.append(1)
+            if candidate_col_total == c * 2:
+                winner.append(2)            
+    elif (((board.diagonal() > 0).sum() == c * 1) and (board.diagonal().sum() == c * 1)) or (((np.fliplr(board).diagonal() > 0).sum() == c * 1) and (np.fliplr(board).diagonal().sum() == c * 1)):
+        winner.append(1)
+    elif (((board.diagonal() > 0).sum() == c * 1) and (board.diagonal().sum() == c * 2)) or (((np.fliplr(board).diagonal() > 0).sum() == c * 1) and (np.fliplr(board).diagonal().sum() == c * 2)):
+        winner.append(2)
+    else:
+        return len(winner)
+   
+    if len(winner) > 1:
+        return list(set(players) - set([who_played]))[0]
+    else:
+        return winner[0]
+    return -1
+
+def computer_move(board, turn, level):
+    # implement your function here
+    # variable definitions
+    a = int(len(board))
+    c = int(math.sqrt(a))
+    d = int(a - c)
+    e = int(c - 1)
+    f = int(d + 1)
+    g = int(c + 1)
+    # valid moves according to the direction
+    valid_L = list(range(0,f,c))
+    valid_R = list(range(e,a,c))
+    valid_T = list(range(0,g,1))
+    valid_B = list(range(d,a,1))
+    # index of valid cubes
+    valid_index = list(valid_L + valid_R + valid_T + valid_B)
+    valid_index.sort()
+    valid_index = list(set(valid_index))
+    # Valid players
+    players = [1,2]
+    # Valid moves
+    all_moves = ['T','B','L','R']
+    # 3 utility functions
+    def all_possible_next_moves(board, turn):
+        possible_moves = []
+        for x in valid_index:
+            for move in all_moves:
+                if check_move(board, turn, index = x, push_from = move):
+                    possible_moves.append((x,move))
+        return possible_moves
+
+    def is_next_winner_move(board, turn):
+        winner_move = []
+        all_possible_moves = all_possible_next_moves(board, turn)
+        for all_possible_move in all_possible_moves:
+            new_board = apply_move(board, turn, index = all_possible_move[0], push_from = all_possible_move[1])
+            if check_victory(new_board, turn) == turn:
+                return (all_possible_move[0],all_possible_move[1])
+        return winner_move
+
+    def is_next_loser_move(board, turn):
+        loser_move = []
+        all_possible_moves_1 = all_possible_next_moves(board, turn)
+        for all_possible_move_1 in all_possible_moves_1:
+            new_board_1 = apply_move(board, turn, index = all_possible_move_1[0], push_from = all_possible_move_1[1])
+            other_player = list(set(players) - set([turn]))[0]
+            all_possible_moves_2 = all_possible_next_moves(new_board_1, other_player)
+            for all_possible_move_2 in all_possible_moves_2:
+                new_board_2 = apply_move(new_board_1, other_player, index = all_possible_move_2[0], push_from = all_possible_move_2[1])
+                if check_victory(new_board_2, other_player) == other_player:
+                    return (all_possible_move_1[0],all_possible_move_2[1])
+        return loser_move
+
+    if level == 0:
+        rand_valid_indx = valid_index[np.random.randint(len(valid_index))]
+        rand_valid_move = all_moves[np.random.randint(len(all_moves))]
+        print(f'Level 0 random move: {rand_valid_indx}, {rand_valid_move}')
+        while not check_move(board, turn, index=rand_valid_indx, push_from=rand_valid_move):
+            rand_valid_indx = valid_index[np.random.randint(len(valid_index))]
+            rand_valid_move = all_moves[np.random.randint(len(all_moves))]
+        return (rand_valid_indx, rand_valid_move)
+    elif level == 1:
+        AllPossibleMoves = all_possible_next_moves(board, turn)
+        if is_next_winner_move(board, turn):
+            print(f'You have a winner move: {is_next_winner_move(board, turn)}')
+            return is_next_winner_move(board, turn)
+        elif is_next_loser_move(board, turn):
+            print(f'You have a loser move: {is_next_loser_move(board, turn)}')
+            # So take any random move other than loser move above
+            safe_moves = list(set(AllPossibleMoves) - set([is_next_loser_move(board, turn)]))
+            any_safe_move = safe_moves[np.random.randint(len(safe_moves))]
+            print(f'This is a safe move you can make: {any_safe_move}')
+            return any_safe_move
+        else:
+            any_random_move = AllPossibleMoves[np.random.randint(len(AllPossibleMoves))]
+            print('There is only a random move you can make: {any_random_move}')
+            return any_random_move
+    return (0,'B')
+    
+def display_board(board):
+    # implement your function here
+    # variable definitions
+    a = int(len(board))
+    c = int(math.sqrt(a))
+    # board function
+    for x in range(0,a,c):
+        print(board[ x+0 : x+c])
+    pass
+
+def menu():
+    # implement your function here
+    # welcome message
+    print("Welcome to QUIXO!")
+    #Menu options for user to input
+    print("To start a new game, enter 1.")
+    print("To read the instructions, enter 2.")
+    print("To exit, enter 3.")
+    #User input
+    player1 = int(input("Please enter your selection:"))
+    if player1 == 1: #To start game
+        print()
+        print("To play with an online player, enter 4.")
+        print("To play with a computer, enter 5.")
+        print()
+        player1 = int(input("Please enter your selection:"))
+        if player1 == 4:
+            print()
+            print("You have chosen to play with an online player.")
+            print()
+            print("Player 1 symbol: Cross [1]")
+            print("Player 2 symbol: Circle [2]")
+            print()
+            board = [0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0]
+            display_board(board)
+            turn = 1
+            who_played = turn
+            while check_victory(board, who_played) != True:
+                if turn == 1:
+                    print("Player 1's Turn.")
+                    print()
+                    player1_cube = int(input("Please input the index of your selected cube:"))
+                    player1_direction = str(input("Please select the direction to push your cube:"))
+                    index = player1_cube
+                    push_from = player1_direction
+                    if check_move(board, turn, index, push_from) == True:
+                        board = apply_move(board, turn, index, push_from)
+                    else:
+                        print()
+                        print("You have selected an invalid cube. Try again.")
+                        player1_cube = int(input("Please input the index of your selected cube:"))
+                        player1_direction = str(input("Please select the direction to push your cube:"))
+                    display_board(board)
+                else:
+                    turn == 2
+                    print("Player 2's Turn.")
+                    print()
+                    player2_cube = int(input("Please input the index of your selected cube:"))
+                    player2_direction = str(input("Please select the direction to push your cube:"))
+                    index = player2_cube
+                    push_from = player2_direction
+                    if check_move(board, turn, index, push_from) == True:
+                        board = apply_move(board, turn, index, push_from)
+                    else:
+                        print()
+                        print("You have selected an invalid cube. Try again.")
+                        player2_cube = int(input("Please input the index of your selected cube:"))
+                        player2_direction = int(input("Please select the direction to push your cube:"))
+                    display_board(board)
+                # to switch players
+                if turn == 1:
+                    turn = 2
+                else:
+                    turn = 1
+            else:
+                print()
+                print("Congratulations!")
+                print( who_played, + ", You are the winner.")
+                print()
+        elif player1 == 5:
+            print()
+            print("You have chosen to play with a computer.")
+            print()
+            print("To play difficulty: easy, enter 0.")
+            print("To play difficulty: medium, enter 1.")
+            print()
+            level = int(input("Please select your difficulty level:"))
+            if level == 0:
+                print()
+                print("Player 1 symbol: Cross [1]")
+                print("Computer symbol: Circle [0]")
+                print()
+                board = [0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0]
+                display_board(board)
+                turn = 1
+                who_played = turn
+                while check_victory(board, who_played) != True:
+                    if turn == 1:
+                        print("Player 1's Turn")
+                        print()
+                        index = int(input("Please input the index of your selected cube:"))
+                        push_from = str(input("Please select the direction to push your cube:"))
+                        if check_move(board, turn, index, push_from) == True:
+                            board = apply_move(board, turn, index, push_from)
+                        else:
+                            print()
+                            print("You have selected an invalid cube. Try again.")
+                            player1_cube = int(input("Please input the index of your selected cube:"))
+                            player1_direction = str(input("Please select the direction to push your cube:"))
+                        display_board(board)
+                    else:
+                        turn == 2
+                        print("Computer's Turn.")
+                        print()
+                        computer_move(board, turn, level)
+                        if check_move(board, turn, index, push_from) == True:
+                            board = apply_move(board, turn, index, push_from)
+                        display_board(board)
+                    if turn == 1:
+                        turn = 2
+                    else:
+                        turn = 1
+                else:
+                    print()
+                    print("Congratulations!")
+                    print( who_played, + ", You are the winner.")
+                    print()
+
+            elif level == 1:
+                print()
+                print("Player 1 symbol: Cross [1]")
+                print("Computer symbol: Circle [0]")
+                print()
+                board = [0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0,  0,0,0,0,0]
+                display_board(board)
+                turn = 1
+                who_played = turn
+                while check_victory(board, who_played) != True:
+                    if turn == 1:
+                        print("Player 1's Turn.")
+                        print()
+                        player1_cube = int(input("Please input the index of your selected cube:"))
+                        player1_direction = str(input("Please select the direction to push your cube:"))
+                        index = player1_cube
+                        push_from = player1_direction
+                        if check_move(board, turn, index, push_from) == True:
+                            board = apply_move(board, turn, index, push_from)
+                        else:
+                            print()
+                            print("You have selected an invalid cube. Try again.")
+                            player1_cube = int(input("Please input the index of your selected cube:"))
+                            player1_direction = str(input("Please select the direction to push your cube:"))
+                        display_board(board)
+                    else:
+                        turn = 2
+                        print("Computer's Turn.")
+                        print()
+                        who_played = turn
+                        return who_played
+                        for rand_valid_indx in computer_move(board, turn, level):
+                            index = rand_valid_indx
+                        for any_safe_move in computer_move(board, turn, level):
+                            push_from = any_safe_move
+                        if check_move(board, turn, index, push_from) == True:
+                            board = apply_move(board, turn, index, push_from)
+                        else:
+                            for rand_valid_indx in computer_move(board, turn, level):
+                                index = rand_valid_indx
+                            for any_safe_move in computer_move(board, turn, level):
+                                push_from = any_safe_move
+                        display_board(board)
+                    if turn == 1:
+                        turn = 2
+                    else:
+                        turn = 1
+                else:
+                    print()
+                    print("Congratulations!")
+                    print( who_played, + ", You are the winner.")
+                    print()
+            else:
+                print()
+                print("Invalid input. Please enter a valid integer value.")
+                level = int(input("Please select your difficulty level:"))
+                print()
+        else:
+            print()
+            print("Invalid input. Please enter a valid integer value.")
+            player1 = int(input("Please enter your selection:"))
+            print()
+    elif player1 == 2: #To read instructions
+        pass
+        print("Objective of the game: To successfully create a horizontal, vertical, or diagonal line of 5 cubes which are all displaying your symbol – either a cross or a circle.")
+        print()
+        print("How to play: Two players take turns to select a blank cube, or a cube with their respective symbols, from the edges of the QUIXO board. After choosing a cube, the cube will display your symbol. You can choose to insert the cube in a few ways, depending on the type of cube chosen (For corner cubes: 2 ways, for cubes within: 3 ways). ")
+        print()
+        print("Winning the game: The first player to succeed in creating 5 cubes of their symbol, in a horizontal, vertical, or diagonal line, wins.")
+        print()
+        print("Key rules:")
+        print("1. You cannot select a cube that is not on the outermost perimeter of the board, i.e., only the 16 outermost cubes can be chosen.")
+        print("2. You cannot choose a cube that already displays your opponent’s symbol.")
+        print("3. You cannot insert your chosen cube back into its original space that you have selected it from.")
+        print()
+        print("To return to the main menu, enter 1.")
+        player1 = int(input("Please input your selection:"))
+        if player1 == 1:
+            return menu()
+        else:
+            print("Invalid input. Please try again.")
+            player1 = int(input("Please input your selection:"))
+    elif player1 == 3: #To exit QUIXO
+        pass
+        print("Thank you for using QUIXO!")
+    else:
+        print("Invalid input. Please enter a valid integer.")
+        print()
+        return menu()
+    pass
+
+ 
+if __name__ == "__main__": 
+    menu()
+
+
+    
