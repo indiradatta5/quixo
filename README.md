@@ -44,5 +44,3 @@ We welcome contributions to improve this game. If you have any suggestions, foun
 
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-Feel free to use and customize this README for your GitHub repository. You can add more details about the code, its usage, or any additional information you'd like to provide to potential users and contributors.
