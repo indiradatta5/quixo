@@ -1,14 +1,6 @@
-QUIXO 
+ 
 QUIXO is a strategic board game implemented in Python where two players take turns to select cubes and create a line of 5 cubes displaying their symbol (cross or circle) in a horizontal, vertical, or diagonal direction to win.
 
-Table of Contents
-Features
-How to Play
-Game Modes
-Instructions
-Contributing
-License
-Features
 Player vs. Player: Play against a friend in the same room.
 
 Player vs. Computer: Challenge the computer at different difficulty levels.
@@ -42,5 +34,4 @@ For detailed instructions on how to play and navigate through the game, refer to
 Contributing
 We welcome contributions to improve this game. If you have any suggestions, found a bug, or want to enhance the game's features, feel free to create a pull request or open an issue. Contributions are encouraged!
 
-License
-This project is licensed under the MIT License - see the LICENSE file for details.
+
